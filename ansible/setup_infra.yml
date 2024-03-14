@@ -1,0 +1,41 @@
+- hosts: localhost
+  tasks:
+    - name: Read secrets file
+      command: 'cat ../secrets.tfvars'
+      register: file_content
+
+    - name: Parse API key
+      set_fact:
+        api_key: "{{ (file_content.stdout | regex_search('api_key = \"(.*)\"', '\\1'))[0] }}"
+    
+    - name: Read Terraform state data
+      shell: cat ../terraform.tfstate
+      register: terraform_state
+
+    - name: Convert Terraform state data to json
+      set_fact:
+        terraform_output: "{{ terraform_state.stdout | from_json }}"
+
+    - name: Extract Public IP
+      set_fact:
+        machine_public_ip: "{{ terraform_output.resources[2].instances[0].attributes.public_ip_address }}"
+      run_once: true
+
+    - add_host:
+        name: "{{ machine_public_ip }}"
+        group: remote
+
+- hosts: remote
+  gather_facts: yes
+  remote_user: 'paperspace'
+  tasks:
+    - name: Update apt packager index
+      ansible.builtin.apt:
+        update_cache: yes
+      become: true
+
+    - name: Install btop
+      ansible.builtin.apt:
+        name: btop
+        state: present
+      become: true
