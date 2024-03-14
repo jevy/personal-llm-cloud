@@ -34,8 +34,32 @@
         update_cache: yes
       become: true
 
-    - name: Install btop
+    - name: Ensure packages are present
       ansible.builtin.apt:
-        name: btop
+        name:
+          - git
         state: present
-      become: true
+        update_cache: yes
+      become: yes
+
+    - name: Clone Repository
+      ansible.builtin.git:
+        repo: 'https://github.com/oobabooga/text-generation-webui.git'
+        dest: '~/text-generation-webui'
+
+    - name: Open port 7860
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+      become: yes
+
+    - name: Allow incoming traffic on port 7860
+      ansible.builtin.ufw:
+        rule: allow
+        port: '7860'
+      become: yes
+
+    - name: Run install script
+      shell: "GPU_CHOICE='NVIDIA' ./start_linux.sh"
+      args:
+        chdir: ~/text-generation-webui/
