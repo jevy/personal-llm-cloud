@@ -1,0 +1,21 @@
+- name: Read Terraform state data
+  command: "cat {{ playbook_dir }}/../terraform.tfstate"
+  register: terraform_state
+
+- name: Set tailscale_key for all hosts
+  set_fact:
+    tailscale_key: "{{ tailscale_key }}"
+  delegate_to: all
+
+- name: Convert Terraform state data to json
+  set_fact:
+    terraform_output: "{{ terraform_state.stdout | from_json }}"
+
+- name: Extract Public IP
+  set_fact:
+    machine_public_ip: "{{ terraform_output.resources[2].instances[0].attributes.public_ip_address }}"
+  run_once: true
+
+- add_host:
+    name: "{{ machine_public_ip }}"
+    group: remote

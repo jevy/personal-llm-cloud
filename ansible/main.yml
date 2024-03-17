@@ -1,0 +1,22 @@
+- hosts: localhost
+  vars_files:
+    - secrets.yml
+  roles:
+    - infrastructure
+
+- hosts: remote
+  gather_facts: yes
+  remote_user: 'paperspace'
+  roles:
+    - oobabooga
+
+- hosts: remote
+  remote_user: 'paperspace'
+  gather_facts: yes
+  roles:
+    - role: artis3n.tailscale
+      vars:
+        tailscale_authkey: "{{ hostvars['localhost'].tailscale_key }}"
+        verbose: true
+
+

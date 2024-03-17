@@ -1,0 +1,22 @@
+- name: Update apt package index
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+
+- name: Ensure packages are present
+  ansible.builtin.apt:
+    name:
+      - git
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Clone Repository
+  ansible.builtin.git:
+    repo: 'https://github.com/oobabooga/text-generation-webui.git'
+    dest: '~/text-generation-webui'
+
+- name: Run install script
+  shell: "GPU_CHOICE='NVIDIA' LAUNCH_AFTER_INSTALL='no' ./start_linux.sh"
+  args:
+    chdir: "~/text-generation-webui/"

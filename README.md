@@ -5,4 +5,5 @@
 # Running it
 
 1. Stand up the machine: `terraform apply -var-file="secrets.tfvars"`
-2. Setup the machine: `ansible-playbook ansible/setup_infra.yml`
+2. Make a vault and add a tailscale key: 
+2. `ansible-playbook main.yml --ask-vault-pass`

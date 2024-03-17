@@ -1,3 +1,4 @@
 secrets.tfvars
 terraform.tfstate*
 .terraform*
+ansible/secrets.yml
