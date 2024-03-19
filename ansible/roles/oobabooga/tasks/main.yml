@@ -7,9 +7,18 @@
   ansible.builtin.apt:
     name:
       - git
+      - nmcli
     state: present
     update_cache: yes
+    cache_valid_time: 3600
   become: true
+
+- name: Set DNS server to 1.1.1.1 using nmcli
+  tasks:
+    - name: Set DNS to 1.1.1.1
+      community.general.nmcli:
+        dns4: 1.1.1.1
+        state: modified
 
 - name: Clone Repository
   ansible.builtin.git:
@@ -17,6 +26,13 @@
     dest: '~/text-generation-webui'
 
 - name: Run install script
-  shell: "GPU_CHOICE='NVIDIA' LAUNCH_AFTER_INSTALL='no' ./start_linux.sh"
+  shell: "USE_CUDA118='N' GPU_CHOICE='NVIDIA' LAUNCH_AFTER_INSTALL='no' ./start_linux.sh"
   args:
     chdir: "~/text-generation-webui/"
+  register: install_script_output
+  ignore_errors: true
+
+- name: Display install script output respecting newlines
+  debug:
+    var: install_script_output.stdout_lines
+  when: install_script_output.stdout is defined
