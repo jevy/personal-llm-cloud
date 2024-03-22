@@ -41,13 +41,16 @@
   ansible.builtin.template:
     src: "start_service.j2"
     dest: "/etc/systemd/system/text-generation-webui.service"
+  become: yes
 
 - name: Reload systemd to make the new service known
   ansible.builtin.systemd:
     daemon_reload: yes
+  become: yes
 
 - name: Start and enable the service
   ansible.builtin.systemd:
     name: text-generation-webui
     state: started
     enabled: yes
+  become: yes
