@@ -1,0 +1,6 @@
+- name: Destroy all hosts in Terraform setup
+  community.general.terraform:
+    project_path: '{{ playbook_dir }}/../../terraform'
+    variables_files:
+      - '{{ playbook_dir }}/../../terraform/secrets.tfvars'
+    state: absent

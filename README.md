@@ -22,6 +22,8 @@ I wanted to make the approach as standard and simple as possible to understand. 
 
 # Getting Started
 
+## Preparation
+
 Stuff to collect in advance:
 
 - *Paperspace API (2 minutes)* - You will need a Paperspace API key.
@@ -31,13 +33,26 @@ Stuff to collect in advance:
 
 ## Setup Terraform and Ansible
 
-TODO 
+1. Install the tailscale role: `ansible-galaxy install -r requirements.yml`
+2. Create a secrets.tfvars with your paperspace api key, user_email and team_id
+3. Create an ansible vault with the tailscale key: `ansible-vault create blah.yml`
+4. In the `ansible` directory, run: `ansible-playbook playbooks/setup_server.yml --ask-vault-pass`
 
-Terraform will need you paperspace key to run. Let's
+To connect to your instance:
+1. Find the IP address either from the Tailscale UI or `tailscale status`
+2. In your browser, visit `http://<tailscale_ip_above>:7860
 
-1. Stand up the machine: `terraform apply -var-file="secrets.tfvars"`
-2. Make a vault and add a tailscale key: 
-2. `ansible-playbook main.yml --ask-vault-pass`
+## Destroying it
+
+1. `cd terraform`
+2. `terraform destroy --var-file=secrets.tfvars`
+
+Note: Paperspace will keep an IP address reservation and will charge you for it. When you're done with it, login to Paperspace and delete it.
+
+# TODO
+
+- [ ] Fix the ansible destroy script
+- [ ] Alternative providers
 
 # Docs
 

@@ -2,3 +2,4 @@ secrets.tfvars
 terraform.tfstate*
 .terraform*
 ansible/secrets.yml
+ansible/roles/artis3n.tailscale

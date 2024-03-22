@@ -1,38 +1,53 @@
-- name: Update apt package index
-  ansible.builtin.apt:
-    update_cache: yes
-  become: true
-
-- name: Ensure packages are present
-  ansible.builtin.apt:
-    name:
-      - git
-      - nmcli
-    state: present
-    update_cache: yes
-    cache_valid_time: 3600
-  become: true
-
-- name: Set DNS server to 1.1.1.1 using nmcli
-  tasks:
-    - name: Set DNS to 1.1.1.1
-      community.general.nmcli:
-        dns4: 1.1.1.1
-        state: modified
-
 - name: Clone Repository
   ansible.builtin.git:
     repo: 'https://github.com/oobabooga/text-generation-webui.git'
     dest: '~/text-generation-webui'
+    update: no
+
+- name: Update CMD_FLAGS.txt file
+  ansible.builtin.copy:
+    dest: "~/text-generation-webui/CMD_FLAGS.txt"
+    content: '--listen --api'
+    force: yes
+
+- name: Check if the install script has already run successfully
+  ansible.builtin.stat:
+    path: "~/text-generation-webui/install_script_ran"
+  register: install_script_marker
 
 - name: Run install script
-  shell: "USE_CUDA118='N' GPU_CHOICE='NVIDIA' LAUNCH_AFTER_INSTALL='no' ./start_linux.sh"
+  shell: "USE_CUDA118='N' GPU_CHOICE='A' LAUNCH_AFTER_INSTALL='no' ./start_linux.sh"
   args:
     chdir: "~/text-generation-webui/"
   register: install_script_output
+  when: not install_script_marker.stat.exists
   ignore_errors: true
 
 - name: Display install script output respecting newlines
   debug:
     var: install_script_output.stdout_lines
   when: install_script_output.stdout is defined
+
+- name: Create a marker file if the install script ran successfully
+  ansible.builtin.file:
+    path: "~/text-generation-webui/install_script_ran"
+    state: touch
+  when:
+    - install_script_output is defined
+    - "'rc' in install_script_output"
+    - install_script_output.rc == 0
+
+- name: Copy the systemd service file to the server
+  ansible.builtin.template:
+    src: "start_service.j2"
+    dest: "/etc/systemd/system/text-generation-webui.service"
+
+- name: Reload systemd to make the new service known
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start and enable the service
+  ansible.builtin.systemd:
+    name: text-generation-webui
+    state: started
+    enabled: yes

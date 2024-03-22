@@ -1,0 +1,74 @@
+- name: Basic deploy of a service
+  community.general.terraform:
+    project_path: '{{ playbook_dir }}/../../terraform'
+    variables_files:
+      - '{{ playbook_dir }}/../../terraform/secrets.tfvars'
+    state: present
+  register: terraform_output
+
+- name: Set tailscale_key for all hosts
+  set_fact:
+    tailscale_key: "{{ lookup('env', 'TAILSCALE_KEY') }}"
+  delegate_to: localhost
+
+- name: Extract Public IP
+  set_fact:
+    machine_public_ip: "{{ terraform_output.outputs['public_ip'].value }}"
+  run_once: true
+
+- name: Add new instance to inventory
+  add_host:
+    name: "{{ machine_public_ip }}"
+    groups: remote
+    ansible_host: "{{ machine_public_ip }}"
+    ansible_user: 'paperspace'
+
+- name: Overwrite nameserver
+  ansible.builtin.lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^nameserver'
+    line: "nameserver 1.1.1.1"
+  become: true
+
+- name: Update apt package index
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+  delegate_to: "{{ machine_public_ip }}"
+
+- name: Ensure packages are present
+  ansible.builtin.apt:
+    name:
+      - git
+      - ufw
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  become: true
+  delegate_to: "{{ machine_public_ip }}"
+
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+    state: enabled
+  delegate_to: "{{ machine_public_ip }}"
+  become: true
+
+- name: Deny traffic on WebUI port 7860
+  community.general.ufw:
+    rule: deny
+    port: '7860'
+    proto: tcp
+    state: enabled
+  delegate_to: "{{ machine_public_ip }}"
+  become: true
+
+- name: Deny traffic on API port 5000
+  community.general.ufw:
+    rule: deny
+    port: '5000'
+    proto: tcp
+    state: enabled
+  delegate_to: "{{ machine_public_ip }}"
+  become: true

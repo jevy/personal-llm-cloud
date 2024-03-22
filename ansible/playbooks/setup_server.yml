@@ -1,8 +1,7 @@
-- hosts: localhost
-  vars_files:
-    - secrets.yml
+- name: Deploy infrastructure and add to inventory
+  hosts: localhost
   roles:
-    - infrastructure
+    - setup
 
 - hosts: remote
   gather_facts: yes
@@ -13,10 +12,10 @@
 - hosts: remote
   remote_user: 'paperspace'
   gather_facts: yes
+  vars_files:
+    - ../secrets.yml
   roles:
     - role: artis3n.tailscale
       vars:
-        tailscale_authkey: "{{ hostvars['localhost'].tailscale_key }}"
+        tailscale_authkey: "{{ tailscale_key }}"
         verbose: true
-
-
