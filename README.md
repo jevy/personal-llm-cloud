@@ -40,7 +40,7 @@ Stuff to collect in advance:
 
 To connect to your instance:
 1. Find the IP address either from the Tailscale UI or `tailscale status`
-2. In your browser, visit `http://<tailscale_ip_above>:7860
+2. In your browser, visit `http://<tailscale_ip_above>:7860`
 
 ## Destroying it
 
